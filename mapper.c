@@ -2,7 +2,7 @@
 
 void mapper_init(mapper_t *self){
     self->offset = 'A';
-    self->to_letter = true;
+    self->to_letter = false;
 }
 
 void map(mapper_t *self, const void *parsed_buffer, void *dest_buffer, size_t size){

@@ -13,9 +13,17 @@ typedef struct{
 
 void mapper_init(mapper_t *self);
 
-void map(mapper_t *self, const void *parsed_buffer, void *dest_buffer, size_t size);
-void map_to_int(mapper_t *self, const char *parsed_buffer, int *dest_buffer, size_t dest_size);
-void map_to_text(mapper_t *self, const int *parsed_buffer, char *dest_buffer, size_t dest_size);
+void map(mapper_t *self, 
+         const void *parsed_buffer, 
+         void *dest_buffer, size_t size);
+
+void map_to_int(mapper_t *self, 
+                const char *parsed_buffer, 
+                char *dest_buffer, size_t dest_size);
+
+void map_to_text(mapper_t *self, 
+                 const char *parsed_buffer, 
+                 char *dest_buffer, size_t dest_size);
 
 void mapper_invert(mapper_t *self);
 

@@ -15,17 +15,20 @@ char* parser_parse_string(parser_t *self,
     size_t parsable = 0;
     size_t i = 0;
     size_t j = 0;
+    // el ultimo es el \n -> lo evito
     for (; i < src_size - 1; ++i){
         if (parser_is_valid(self, src_buffer[i])){
             ++parsable;
         }
     }
 
-    char* new_string = (char*) calloc(parsable + 1, sizeof(char));
+    // tengo que agregarle un \0 ya que desde afuera no se el tamaño
+    // y pienso llamar a strlen
+    char* new_string = (char*) calloc(parsable + 1, sizeof(char)); 
     if (!new_string)
         return NULL;
 
-    for(i = 0; i < src_size - 1; ++i){
+    for (i = 0; i < src_size - 1; ++i){
         if (parser_is_valid(self, src_buffer[i])){
             new_string[j++] = src_buffer[i];
         }

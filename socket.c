@@ -39,9 +39,14 @@ void socket_bind_and_listen(socket_t *self,
         return;
     }
 
-    self->fd = socket(results->ai_family, 
-                      results->ai_socktype,
-                      results->ai_protocol);
+    struct addrinfo * aux = results;
+    for (; aux; aux = aux->ai_next){
+        self->fd = socket(aux->ai_family, 
+                          aux->ai_socktype,
+                          aux->ai_protocol);
+        bind(self->fd, aux->ai_addr, aux->ai_addrlen);
+    }
+
 
     if (self->fd < 0){
         fprintf(stderr, "socket_bind_and_listen: could not create socket");
@@ -49,13 +54,13 @@ void socket_bind_and_listen(socket_t *self,
         return;
     }
 
-    bind(self->fd, results->ai_addr, results->ai_addrlen);
     freeaddrinfo(results);
 
     listen(self->fd, 1);
 }
 
-void socket_accept(socket_t *listener, socket_t *peer){
+int socket_accept(socket_t *listener, socket_t *peer){
+    return accept(listener->fd, 0, 0);
 }
 
 void socket_connect(socket_t *self, const char *host, const char *service){
@@ -63,20 +68,29 @@ void socket_connect(socket_t *self, const char *host, const char *service){
     results = socket_getadrrinfo(self, host, service, 0);
 
     if (!results){
-        fprintf(stderr, "socket_getaddrinfo: got nullpointer");
+        printf("%s\n", "socket_getaddrinfo: got nullpointer");
         return;
     }
 
-    self->fd = socket(results->ai_family, 
-                      results->ai_socktype,
-                      results->ai_protocol);
+    struct addrinfo *aux = results;
+
+    for (; aux; aux = aux->ai_next){
+        self->fd = socket(aux->ai_family, 
+                          aux->ai_socktype,
+                          aux->ai_protocol);
+        if (connect(self->fd, aux->ai_addr, aux->ai_addrlen) == -1){
+            // si no me pude conectar tengo que devolver -1
+            break;
+        }
+    }
 
     if (self->fd < 0){
-        fprintf(stderr, "socket_bind_and_listen: could not create socket");
+        printf("%s\n", "socket_bind_and_listen: could not create socket");
+        freeaddrinfo(results);
         return;
     }
 
-    connect(self->fd, results->ai_addr, results->ai_addrlen);
+    
     freeaddrinfo(results);
 }
 
@@ -86,7 +100,8 @@ ssize_t socket_send(socket_t *self, const void *buffer, size_t length){
     const char *aux = buffer;
 
     while (bytes_send < length){
-        send_ret = send(self->fd, &aux[bytes_send], length - bytes_send, MSG_NOSIGNAL);
+        send_ret = send(self->fd, &aux[bytes_send], 
+                        length - bytes_send, MSG_NOSIGNAL);
         if (send_ret == -1){
             break;
         }
@@ -102,8 +117,8 @@ ssize_t socket_receive(socket_t *self, void *buffer, size_t length){
     char *aux = buffer;
 
     while (bytes_recv < length){
-        recv_ret = recv(self->fd, aux[bytes_recv], length - bytes_recv, MSG_NOSIGNAL);
-        if (recv_ret == -1){
+        recv_ret = recv(self->fd, &aux[bytes_recv], length - bytes_recv, 0);
+        if (recv_ret == -1 || recv_ret == 0){
             break;
         }
         bytes_recv += recv_ret;

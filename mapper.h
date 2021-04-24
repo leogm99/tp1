@@ -19,10 +19,10 @@ void map(mapper_t *self,
 
 void map_to_int(mapper_t *self, 
                 const char *parsed_buffer, 
-                char *dest_buffer, size_t dest_size);
+                short *dest_buffer, size_t dest_size);
 
 void map_to_text(mapper_t *self, 
-                 const char *parsed_buffer, 
+                 const short *parsed_buffer, 
                  char *dest_buffer, size_t dest_size);
 
 void mapper_invert(mapper_t *self);

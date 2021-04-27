@@ -16,10 +16,7 @@ size_t file_reader_readline(file_reader_t *self, char **buffer){
     size_t n = 0;
     ssize_t ret = getline(buffer, &n, self->file);
     if (ret == -1){
-        if(feof(self->file)){
-            return 0;
-        }
-        return 1;
+        return 0;
     }
     return ret;
 }

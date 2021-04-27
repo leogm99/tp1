@@ -29,10 +29,10 @@ int client_read_and_send(client_t *self, file_reader_t *file_reader, char *sent_
 
     // si lei solo 1
     // significa que lei solamente un \n
-    if (expected == 1){
+    /*if (expected == 1){
         free(line);
         return 1;
-    }
+    }*/
 
     //uint16_t server_expected = htons(expected);
     if (socket_send(self->cli_sock, &expected, sizeof(uint16_t)) < sizeof(uint16_t)){
@@ -63,6 +63,12 @@ int client_receive_and_print(client_t *self){
     if (socket_receive(self->cli_sock, buffer, sizeof(char) * size) < sizeof(char) * size){
         free(buffer);
         return -1;
+    }
+
+    if (size == 1){
+        free(buffer);
+        puts("");
+        return 0;
     }
 
     for (int i = 0; i < size; ++i){
@@ -99,8 +105,9 @@ int main(int argc, const char *argv[]){
         return -1;
     }
 
+    int ret = 0;
     while (1){
-        if (client_read_and_send(&client, &file_reader, &sent_less_flag) <= 0){
+        if ((ret = client_read_and_send(&client, &file_reader, &sent_less_flag)) <= 0){
             break;
         }
 

@@ -24,12 +24,11 @@ int server_accept(server_t *self){
     if ((self->serv_sock.fd = socket_accept(&self->listener, 0)) < 0){
         return -1;
     }
+    return 0;
 }
 
 int server_send(server_t *self, char *buffer, size_t size){
     uint16_t to_send = size * sizeof(char);
-
-    printf("%d\n", to_send);
 
     if (socket_send(&self->serv_sock, &to_send, sizeof(uint16_t)) < sizeof(uint16_t)){
         return -1;
@@ -126,6 +125,12 @@ int main(int argc, const char *argv[]){
         char *buffer = server_receive(&server, &read);
         if (!buffer){
             break;
+        }
+
+        if (buffer[0] == '\n'){
+            server_send(&server, buffer, 1);
+            free(buffer);
+            continue;
         }
 
         char *parsed = server_parse(&server, buffer, read, &parsed_read);

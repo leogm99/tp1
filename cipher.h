@@ -18,7 +18,7 @@ typedef struct {
 
 void cipher_init(cipher_t *self);
 
-void cipher_create_key(cipher_t *self, const char *raw_key);
+void cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key);
 
 short* cipher_encode(cipher_t *self, short *buffer, const size_t buffer_size, size_t *new_size);
 

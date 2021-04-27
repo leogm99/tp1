@@ -63,13 +63,13 @@ int socket_accept(socket_t *listener, socket_t *peer){
     return accept(listener->fd, 0, 0);
 }
 
-void socket_connect(socket_t *self, const char *host, const char *service){
+int socket_connect(socket_t *self, const char *host, const char *service){
     struct addrinfo * results;
     results = socket_getadrrinfo(self, host, service, 0);
 
     if (!results){
         printf("%s\n", "socket_getaddrinfo: got nullpointer");
-        return;
+        return -1;
     }
 
     struct addrinfo *aux = results;
@@ -87,11 +87,12 @@ void socket_connect(socket_t *self, const char *host, const char *service){
     if (self->fd < 0){
         printf("%s\n", "socket_bind_and_listen: could not create socket");
         freeaddrinfo(results);
-        return;
+        return -1;
     }
 
-    
+
     freeaddrinfo(results);
+    return 0;
 }
 
 ssize_t socket_send(socket_t *self, const void *buffer, size_t length){

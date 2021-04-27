@@ -5,8 +5,5 @@ Makefile
 *.o
 main.c
 socket
-client.c
 client
-client.h
 casos
-server.c

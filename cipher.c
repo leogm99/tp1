@@ -5,15 +5,9 @@ void cipher_init(cipher_t *self){}
 // Por mas de que el string tenga 16 c + \0
 // No interesa, ya que lo unico que necesito 
 // son los numeros (hasta 16)
-void cipher_create_key(cipher_t *self, const char *raw_key){
+void cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key){
     self->dim = sqrt(strlen(raw_key));
-
-    mapper_t mapper;
-    mapper_init(&mapper);
-
-    map(&mapper, raw_key, self->key, KEY_MAX);
-    
-    mapper_destroy(&mapper);
+    map(mapper, raw_key, self->key, KEY_MAX);
 }
 
 // La parte logica, debe multiplicar la key con el buffer
@@ -34,6 +28,9 @@ short* cipher_encode(cipher_t *self, short *buffer, const size_t buffer_size, si
 
     short *new_buf = calloc(size, sizeof(short));
     if (!new_buf){
+        if (resized){
+            free(aux);
+        }
         return NULL;
     }
 

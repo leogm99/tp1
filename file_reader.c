@@ -12,11 +12,16 @@ int file_reader_init(file_reader_t *self, const char *filename){
     return 0;
 }
 
-unsigned short file_reader_readline(file_reader_t *self, char *buffer){
-    if (fgets(buffer, MAX_SIZE, self->file) != NULL){
-        return strlen(buffer);
+size_t file_reader_readline(file_reader_t *self, char **buffer){
+    size_t n = 0;
+    ssize_t ret = getline(buffer, &n, self->file);
+    if (ret == -1){
+        if(feof(self->file)){
+            return 0;
+        }
+        return 1;
     }
-    return 0;
+    return ret;
 }
 
 int file_reader_destroy(file_reader_t *self){

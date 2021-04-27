@@ -1,4 +1,4 @@
-#include "file_reader.h"
+#include "client_file_reader.h"
 
 int file_reader_init(file_reader_t *self, const char *filename){
     if (!filename){

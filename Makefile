@@ -13,9 +13,9 @@ extension = c
 # toma todos los archivos con la extensiÃ³n mencionada. Para especificar hay que
 # descomentar la lÃ­nea (quitarle el '#' del principio).
 # NOTA: No poner cabeceras (.h).
-fuentes_client = client.c file_reader.c
-fuentes_server = server.c parser.c cipher.c
-fuentes_common = socket.c mapper.c common_wrap_socket.c
+#fuentes_client = client.c file_reader.c
+#fuentes_server = server.c parser.c cipher.c
+#fuentes_common = socket.c mapper.c common_wrap_socket.c
 
 # Si usa funciones de math.h, descomentar (quitar el '#' a) la siguiente lÃ­nea.
 math = si

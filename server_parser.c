@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "server_parser.h"
 
 void parser_init(parser_t *self){
     self->lower = 'A';

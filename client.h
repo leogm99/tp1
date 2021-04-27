@@ -1,8 +1,8 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
-#include "socket.h"
-#include "file_reader.h"
+#include "client_file_reader.h"
+#include "common_socket.h"
 
 #define ARGC_CLIENT 4
 #define HOST argv[1]

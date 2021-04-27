@@ -5,10 +5,10 @@
 #define SERV argv[1]
 #define KEY argv[2]
 
-#include "socket.h"
-#include "parser.h"
-#include "mapper.h"
-#include "cipher.h"
+#include "common_socket.h"
+#include "server_parser.h"
+#include "common_mapper.h"
+#include "server_cipher.h"
 
 
 typedef struct {

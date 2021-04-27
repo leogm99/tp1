@@ -6,7 +6,7 @@
 // la key mas larga puede tener 16 caracteres
 #define KEY_MAX 16
 
-#include "mapper.h"
+#include "common_mapper.h"
 #include "math.h"
 
 

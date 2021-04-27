@@ -1,4 +1,4 @@
-#include "cipher.h"
+#include "server_cipher.h"
 
 void cipher_init(cipher_t *self){}
 

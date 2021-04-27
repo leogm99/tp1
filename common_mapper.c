@@ -1,4 +1,4 @@
-#include "mapper.h"
+#include "common_mapper.h"
 
 void mapper_init(mapper_t *self){
     self->offset = 'A';

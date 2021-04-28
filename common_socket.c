@@ -84,7 +84,7 @@ int socket_accept(socket_t *listener, socket_t *peer){
 
 int socket_connect(socket_t *self, const char *host, const char *service){
     struct addrinfo * results;
-    results = socket_getadrrinfo(self, host, service, 0);
+    results = socket_getadrrinfo(self, 0, service, 0);
 
     if (!results){
         return -1;
@@ -93,26 +93,27 @@ int socket_connect(socket_t *self, const char *host, const char *service){
     struct addrinfo *aux = results;
     int connect_error = 0;
     for (; aux; aux = aux->ai_next){
-        connect_error = 0;
         self->fd = socket(aux->ai_family, 
                           aux->ai_socktype,
                           aux->ai_protocol);
         connect_error = connect(self->fd, aux->ai_addr, aux->ai_addrlen);
-        if (connect_error){
-            if (self->fd != -1){
-                close(self->fd);
-            }
+        if (!connect_error){
+            freeaddrinfo(results);
+            return 0;
+        }
+
+        if (self->fd != -1){
+            close(self->fd);
         }
     }
 
-    if (connect_error && self->fd < 0){
+    if (connect_error){
+        printf("DEBUG PRINT: INVALID FD, CONNECT_ERROR\n");
         socket_destroy(self);
         freeaddrinfo(results);
         return -1;
     }
 
-
-    freeaddrinfo(results);
     return 0;
 }
 

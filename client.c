@@ -114,6 +114,7 @@ int main(int argc, const char *argv[]){
     }
 
     if (client_connect(&client, HOST, SERV) == -1){
+        printf("DEBUG PRINT: CLIENT CONNECT");
         client_destroy(&client);
         return -1;
     }

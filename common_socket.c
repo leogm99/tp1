@@ -96,12 +96,11 @@ int socket_connect(socket_t *self, const char *host, const char *service){
 }
 
 ssize_t socket_send(socket_t *self, const void *buffer, size_t length){
-    ssize_t send_ret, bytes_send; 
-    send_ret = bytes_send = 0;
+    ssize_t bytes_send = 0;
     const char *aux = buffer;
 
     while (bytes_send < length){
-        send_ret = send(self->fd, &aux[bytes_send], 
+        ssize_t send_ret = send(self->fd, &aux[bytes_send], 
                         length - bytes_send, MSG_NOSIGNAL);
         if (send_ret == -1){
             break;
@@ -113,12 +112,12 @@ ssize_t socket_send(socket_t *self, const void *buffer, size_t length){
 }
 
 ssize_t socket_receive(socket_t *self, void *buffer, size_t length){
-    ssize_t recv_ret, bytes_recv;
-    recv_ret = bytes_recv = 0;
+    ssize_t bytes_recv = 0;
     char *aux = buffer;
 
     while (bytes_recv < length){
-        recv_ret = recv(self->fd, &aux[bytes_recv], length - bytes_recv, 0);
+        ssize_t recv_ret = recv(self->fd, &aux[bytes_recv], 
+                                length - bytes_recv, 0);
         if (recv_ret == -1 || recv_ret == 0){
             break;
         }

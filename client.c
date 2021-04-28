@@ -4,20 +4,28 @@
 // ./client <hostname> <servicename> <filename> <- filepath
 // echo -e ... | ./client <hostaname> <servicename> - <- stdin
 
-void client_init(client_t *self, socket_t *sock){
-    //socket_init(&self->cli_sock);
-    self->cli_sock = sock;
+int client_init(client_t *self, const char *filename){
+    socket_init(&self->cli_sock);
+    if (file_reader_init(&self->file_reader, filename) < 0){
+        return -1;
+    }
+    mapper_init(&self->mapper);
+
+    mapper_invert(&self->mapper);
+
+    return 0;
 }
 
 int client_connect(client_t *self, const char *host, const char *service){
-    return socket_connect(self->cli_sock, host, service);
+    return socket_connect(&self->cli_sock, host, service);
 }
 
-int client_read_and_send(client_t *self, file_reader_t *file_reader, char *sent_less_flag){
+int client_read_and_send(client_t *self, char *sent_less_flag, 
+                         char *newline_flag){
     int16_t expected = 0;
     char *line = NULL; 
 
-    expected = file_reader_readline(file_reader, &line);
+    expected = file_reader_readline(&self->file_reader, &line);
 
     // si lei 0, ya esta
     // de todas maneras tengo que hacer free
@@ -27,19 +35,20 @@ int client_read_and_send(client_t *self, file_reader_t *file_reader, char *sent_
         return 0;
     }
 
-    // si lei solo 1
-    // significa que lei solamente un \n
-    /*if (expected == 1){
+    if (line[0] == '\n'){
         free(line);
+        *newline_flag = 1;
+        puts("");
         return 1;
-    }*/
+    }
 
-    //uint16_t server_expected = htons(expected);
-    if (socket_send(self->cli_sock, &expected, sizeof(uint16_t)) < sizeof(uint16_t)){
+    uint16_t server_expected = htons(expected);
+    if (socket_send(&self->cli_sock, &server_expected, sizeof(uint16_t)) 
+                    < sizeof(uint16_t)){
         *sent_less_flag = 1;
     }
 
-    if (socket_send(self->cli_sock, line, expected) < expected){
+    if (socket_send(&self->cli_sock, line, expected) < expected){
         *sent_less_flag = 1; 
     }
 
@@ -50,38 +59,45 @@ int client_read_and_send(client_t *self, file_reader_t *file_reader, char *sent_
 int client_receive_and_print(client_t *self){
     uint16_t size = 0;
 
-    if (socket_receive(self->cli_sock, &size, sizeof(uint16_t)) < sizeof(uint16_t)){
+    if (socket_receive(&self->cli_sock, &size, sizeof(uint16_t)) 
+                       < sizeof(uint16_t)){
         return -1;
     }
 
     char *buffer = calloc(size, sizeof(char));
-
     if (!buffer) {
         return -1;
     }
 
-    if (socket_receive(self->cli_sock, buffer, sizeof(char) * size) < sizeof(char) * size){
+    if (socket_receive(&self->cli_sock, buffer, sizeof(char) * size) 
+                       < sizeof(char) * size){
         free(buffer);
         return -1;
     }
 
-    if (size == 1){
+    char *mapped_buffer = calloc(size, sizeof(char));
+
+    if (!mapped_buffer){
         free(buffer);
-        puts("");
-        return 0;
+        return -1;
     }
 
+    map(&self->mapper, buffer, mapped_buffer, size);
+
     for (int i = 0; i < size; ++i){
-        printf("%c", buffer[i] + 'A');
+        printf("%c", mapped_buffer[i]);
     }
     puts("");
 
     free(buffer);
+    free(mapped_buffer);
     return 0;
 }
 
 void client_destroy(client_t *self){
-    self->cli_sock = NULL;
+    socket_destroy(&self->cli_sock);
+    file_reader_destroy(&self->file_reader);
+    mapper_destroy(&self->mapper);
 }
 
 int main(int argc, const char *argv[]){
@@ -89,26 +105,28 @@ int main(int argc, const char *argv[]){
         return -1;
     }
 
-    socket_t cli_sock;
     client_t client;
-    file_reader_t file_reader;
     char sent_less_flag = 0;
+    char newline_flag = 0;
 
-    socket_init(&cli_sock);
-    client_init(&client, &cli_sock);
-    file_reader_init(&file_reader, FILE);
-
+    if (client_init(&client, FILE) < 0){
+        return -1;
+    }
 
     if (client_connect(&client, HOST, SERV) == -1){
-        file_reader_destroy(&file_reader);
         client_destroy(&client);
         return -1;
     }
 
-    int ret = 0;
     while (1){
-        if ((ret = client_read_and_send(&client, &file_reader, &sent_less_flag)) <= 0){
+        if ((client_read_and_send(&client, &sent_less_flag, 
+                                  &newline_flag)) <= 0){
             break;
+        }
+
+        if (newline_flag){
+            newline_flag = 0;
+            continue;
         }
 
         if (client_receive_and_print(&client) < 0){
@@ -116,10 +134,7 @@ int main(int argc, const char *argv[]){
         }
     }
 
-    socket_destroy(&cli_sock);
-    file_reader_destroy(&file_reader);
     client_destroy(&client);
-
 
     return sent_less_flag;
 }

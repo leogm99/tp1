@@ -12,7 +12,8 @@ void cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key){
 
 // La parte logica, debe multiplicar la key con el buffer
 // Hay que lograr un toque de aritmetica modular
-short* cipher_encode(cipher_t *self, short *buffer, const size_t buffer_size, size_t *new_size){
+short* cipher_encode(cipher_t *self, short *buffer,
+                     const size_t buffer_size, size_t *new_size){
     size_t size = buffer_size;
     size_t key_size = self->dim * self->dim;
     short *aux = buffer;
@@ -36,7 +37,8 @@ short* cipher_encode(cipher_t *self, short *buffer, const size_t buffer_size, si
 
     for (size_t i = 0; i < size - self->dim + 1; i+=self->dim){
         for (size_t j = 0; j < key_size; ++j){
-            new_buf[i + (j / self->dim)] += aux[i + (j % self->dim)] * self->key[j];
+            new_buf[i + (j / self->dim)] += aux[i + (j % self->dim)] 
+                                            * self->key[j];
         }
     }
 
@@ -51,7 +53,8 @@ short* cipher_encode(cipher_t *self, short *buffer, const size_t buffer_size, si
     return new_buf;
 }
 
-short* cipher_resize(cipher_t *self, short *buffer, const size_t old_size, size_t *resize){
+short* cipher_resize(cipher_t *self, short *buffer, 
+                     const size_t old_size, size_t *resize){
     size_t new_size = old_size + self->dim - (old_size % self->dim);
 
     //short* new_buffer = realloc(buffer, sizeof(short) * new_size);

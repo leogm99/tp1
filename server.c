@@ -30,7 +30,8 @@ int server_accept(server_t *self){
 int server_send(server_t *self, char *buffer, size_t size){
     uint16_t to_send = size * sizeof(char);
 
-    if (socket_send(&self->serv_sock, &to_send, sizeof(uint16_t)) < sizeof(uint16_t)){
+    if (socket_send(&self->serv_sock, &to_send, sizeof(uint16_t)) 
+                    < sizeof(uint16_t)){
         return -1;
     }
 
@@ -43,10 +44,12 @@ int server_send(server_t *self, char *buffer, size_t size){
 
 char* server_receive(server_t *self, size_t *size_read){
     uint16_t buf_size = 0;
-    if (socket_receive(&self->serv_sock, &buf_size, sizeof(uint16_t)) < sizeof(uint16_t)){
+    if (socket_receive(&self->serv_sock, &buf_size, sizeof(uint16_t)) 
+                       < sizeof(uint16_t)){
         return NULL;
     }
 
+    buf_size = ntohs(buf_size);
     char *buffer = calloc(buf_size, sizeof(buf_size));
 
     if (!buffer){
@@ -81,7 +84,8 @@ short* server_map(server_t *self, char *buffer, size_t size){
     return mapped_buffer;
 }
 
-short* server_encode(server_t *self, short *buffer, const size_t size, size_t *new_size){
+short* server_encode(server_t *self, short *buffer, 
+                     const size_t size, size_t *new_size){
     short *encoded = cipher_encode(&self->cipher, buffer, size, new_size);
     return encoded;
 }
@@ -107,7 +111,6 @@ void server_destroy(server_t *self){
     mapper_destroy(&self->mapper);
 
     cipher_destroy(&self->cipher);
-
 }
 
 int main(int argc, const char *argv[]){
@@ -116,7 +119,11 @@ int main(int argc, const char *argv[]){
 
     server_create_key(&server, KEY);
     server_bind_and_listen(&server, SERV);
-    server_accept(&server);
+
+    if (server_accept(&server) < 0){
+        server_destroy(&server);
+        return -1;
+    }
 
     while (1){
         size_t read = 0;
@@ -125,12 +132,6 @@ int main(int argc, const char *argv[]){
         char *buffer = server_receive(&server, &read);
         if (!buffer){
             break;
-        }
-
-        if (buffer[0] == '\n'){
-            server_send(&server, buffer, 1);
-            free(buffer);
-            continue;
         }
 
         char *parsed = server_parse(&server, buffer, read, &parsed_read);

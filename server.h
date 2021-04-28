@@ -34,7 +34,8 @@ char* server_receive(server_t *self, size_t *size_read);
 char* server_parse(server_t *self, char *buffer, size_t size, size_t *new_size);
 short* server_map(server_t *self, char *buffer, size_t size);
 
-short* server_encode(server_t *self, short *buffer, const size_t size, size_t *new_size);
+short* server_encode(server_t *self, short *buffer, 
+                     const size_t size, size_t *new_size);
 
 char *server_recast(server_t *self, short *buffer, size_t size);
 

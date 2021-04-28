@@ -22,7 +22,7 @@ void map_to_int(mapper_t *self,
                 short *dest_buffer, size_t dest_size);
 
 void map_to_text(mapper_t *self, 
-                 const short *parsed_buffer, 
+                 const char *parsed_buffer, 
                  char *dest_buffer, size_t dest_size);
 
 void mapper_invert(mapper_t *self);

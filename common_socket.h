@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 

@@ -2,7 +2,6 @@
 #define __FILE_READER_H__
 
 #define MAX_SIZE 180 
-#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

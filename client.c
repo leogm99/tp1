@@ -36,9 +36,10 @@ int client_read_and_send(client_t *self, char *sent_less_flag,
     }
 
     if (line[0] == '\n'){
+        char newline = '\n';
         free(line);
         *newline_flag = 1;
-        puts("");
+        fwrite(&newline, sizeof(char), 1, stdout);
         return 1;
     }
 
@@ -84,10 +85,9 @@ int client_receive_and_print(client_t *self){
 
     map(&self->mapper, buffer, mapped_buffer, size);
 
-    for (int i = 0; i < size; ++i){
-        printf("%c", mapped_buffer[i]);
-    }
-    puts("");
+    fwrite(mapped_buffer, sizeof(char), size, stdout);
+    char newline = '\n';
+    fwrite(&newline, sizeof(char), 1, stdout);
 
     free(buffer);
     free(mapped_buffer);

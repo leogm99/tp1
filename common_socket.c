@@ -3,8 +3,10 @@
 void socket_init(socket_t *self){}
 
 void socket_destroy(socket_t *self){
-    shutdown(self->fd, SHUT_RDWR);
-    close(self->fd);
+    if (self->fd != -1){
+        shutdown(self->fd, SHUT_RDWR);
+        close(self->fd);
+    }
     self->fd = -1;
 }
 
@@ -31,7 +33,7 @@ struct addrinfo *socket_getadrrinfo(socket_t *self,
 
 int socket_bind_and_listen(socket_t *self, const char *service){
     struct addrinfo * results; 
-    results = socket_getadrrinfo(self, NULL, service, AI_PASSIVE); // server
+    results = socket_getadrrinfo(self, 0, service, AI_PASSIVE); // server
 
     if (!results){
         socket_destroy(self);
@@ -85,24 +87,26 @@ int socket_connect(socket_t *self, const char *host, const char *service){
     results = socket_getadrrinfo(self, host, service, 0);
 
     if (!results){
-        printf("%s\n", "socket_getaddrinfo: got nullpointer");
         return -1;
     }
 
     struct addrinfo *aux = results;
-
+    int connect_error = 0;
     for (; aux; aux = aux->ai_next){
+        connect_error = 0;
         self->fd = socket(aux->ai_family, 
                           aux->ai_socktype,
                           aux->ai_protocol);
-        if (connect(self->fd, aux->ai_addr, aux->ai_addrlen) == -1){
-            // si no me pude conectar tengo que devolver -1
-            break;
+        connect_error = connect(self->fd, aux->ai_addr, aux->ai_addrlen);
+        if (connect_error){
+            if (self->fd != -1){
+                close(self->fd);
+            }
         }
     }
 
-    if (self->fd < 0){
-        printf("%s\n", "socket_bind_and_listen: could not create socket");
+    if (connect_error && self->fd < 0){
+        socket_destroy(self);
         freeaddrinfo(results);
         return -1;
     }

@@ -24,6 +24,7 @@ int server_accept(server_t *self){
     if ((self->serv_sock.fd = socket_accept(&self->listener, 0)) < 0){
         return -1;
     }
+    socket_destroy(&self->listener);
     return 0;
 }
 

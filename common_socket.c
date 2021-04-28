@@ -5,6 +5,7 @@ void socket_init(socket_t *self){}
 void socket_destroy(socket_t *self){
     shutdown(self->fd, SHUT_RDWR);
     close(self->fd);
+    self->fd = -1;
 }
 
 struct addrinfo *socket_getadrrinfo(socket_t *self, 
@@ -28,35 +29,51 @@ struct addrinfo *socket_getadrrinfo(socket_t *self,
     return results;
 }
 
-void socket_bind_and_listen(socket_t *self, 
-                            const char *host, 
-                            const char *service){
+int socket_bind_and_listen(socket_t *self, const char *service){
     struct addrinfo * results; 
-    results = socket_getadrrinfo(self, host, service, AI_PASSIVE); // server
+    results = socket_getadrrinfo(self, NULL, service, AI_PASSIVE); // server
 
     if (!results){
+        socket_destroy(self);
         fprintf(stderr, "socket_getaddrinfo: got nullpointer");
-        return;
+        return -1;
     }
 
     struct addrinfo * aux = results;
-    for (; aux; aux = aux->ai_next){
-        self->fd = socket(aux->ai_family, 
+    int fd = -1;
+    int bind_error = 0;
+    for (; aux && !bind_error; aux = aux->ai_next){
+        fd = socket(aux->ai_family, 
                           aux->ai_socktype,
                           aux->ai_protocol);
-        bind(self->fd, aux->ai_addr, aux->ai_addrlen);
+        if ((bind_error = bind(fd, aux->ai_addr, aux->ai_addrlen)) == 0){
+            break;
+        }
     }
 
-
-    if (self->fd < 0){
-        fprintf(stderr, "socket_bind_and_listen: could not create socket");
+    if (bind_error) {
         freeaddrinfo(results);
-        return;
+        socket_destroy(self);
+        return -1;
+    }
+
+    self->fd = fd;
+    if (fd < 0){
+        fprintf(stderr, "socket_bind_and_listen: could not create socket");
+        socket_destroy(self);
+        freeaddrinfo(results);
+        return -1;
     }
 
     freeaddrinfo(results);
 
-    listen(self->fd, 1);
+    if (listen(self->fd, 1) == -1){
+        printf("Error escuchando");
+        socket_destroy(self);
+        return -1;
+    }
+
+    return 0;
 }
 
 int socket_accept(socket_t *listener, socket_t *peer){

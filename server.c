@@ -16,8 +16,8 @@ void server_create_key(server_t *self, const char *raw_key){
     cipher_create_key(&self->cipher, &self->mapper, raw_key); 
 }
 
-void server_bind_and_listen(server_t *self, const char *service){
-    socket_bind_and_listen(&self->listener, "localhost", service);
+int server_bind_and_listen(server_t *self, const char *service){
+    return socket_bind_and_listen(&self->listener, service);
 }
 
 int server_accept(server_t *self){
@@ -118,7 +118,10 @@ int main(int argc, const char *argv[]){
     server_init(&server);
 
     server_create_key(&server, KEY);
-    server_bind_and_listen(&server, SERV);
+    if (server_bind_and_listen(&server, SERV) < 0){
+        server_destroy(&server);
+        return -1;
+    }
 
     if (server_accept(&server) < 0){
         server_destroy(&server);

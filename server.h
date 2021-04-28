@@ -25,7 +25,7 @@ void server_init(server_t *self);
 
 void server_create_key(server_t *self, const char *raw_key);
 
-void server_bind_and_listen(server_t *self, const char *service);
+int server_bind_and_listen(server_t *self, const char *service);
 int server_accept(server_t *self);
 
 int server_send(server_t *self, char *buffer, size_t size);

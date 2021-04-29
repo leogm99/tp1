@@ -35,14 +35,6 @@ int client_read_and_send(client_t *self, char *sent_less_flag,
         return 0;
     }
 
-    if (line[0] == '\n'){
-        char newline = '\n';
-        free(line);
-        *newline_flag = 1;
-        fwrite(&newline, sizeof(char), 1, stdout);
-        return 1;
-    }
-
     uint16_t server_expected = htons(expected);
     if (socket_send(&self->cli_sock, &server_expected, sizeof(uint16_t)) 
                     < sizeof(uint16_t)){
@@ -58,11 +50,19 @@ int client_read_and_send(client_t *self, char *sent_less_flag,
 }
 
 int client_receive_and_print(client_t *self){
+    char newline = '\n';
     uint16_t size = 0;
 
     if (socket_receive(&self->cli_sock, &size, sizeof(uint16_t)) 
                        < sizeof(uint16_t)){
         return -1;
+    }
+
+    size = htons(size);
+
+    if (size == 0){
+        fwrite(&newline, 1, 1, stdout);
+        return 0;
     }
 
     char *buffer = calloc(size, sizeof(char));
@@ -86,7 +86,6 @@ int client_receive_and_print(client_t *self){
     map(&self->mapper, buffer, mapped_buffer, size);
 
     fwrite(mapped_buffer, sizeof(char), size, stdout);
-    char newline = '\n';
     fwrite(&newline, sizeof(char), 1, stdout);
 
     free(buffer);

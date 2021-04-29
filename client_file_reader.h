@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <sys/types.h>
 
 typedef struct{
     FILE *file;

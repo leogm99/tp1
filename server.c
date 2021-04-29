@@ -30,10 +30,14 @@ int server_accept(server_t *self){
 
 int server_send(server_t *self, char *buffer, size_t size){
     uint16_t to_send = size * sizeof(char);
-
-    if (socket_send(&self->serv_sock, &to_send, sizeof(uint16_t)) 
+    uint16_t client_to_send = ntohs(to_send);
+    if (socket_send(&self->serv_sock, &client_to_send, sizeof(uint16_t)) 
                     < sizeof(uint16_t)){
         return -1;
+    }
+
+    if (size == 0){
+        return 0;
     }
 
     if (socket_send(&self->serv_sock, buffer, to_send) < to_send){
@@ -144,6 +148,12 @@ int main(int argc, const char *argv[]){
             break;
         }
         free(buffer);
+
+        if (parsed_read == 0){
+            server_send(&server, 0, 0);
+            free(parsed);
+            continue;
+        }
 
         short *mapped = server_map(&server, parsed, parsed_read);            
         if (!mapped){

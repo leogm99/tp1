@@ -114,7 +114,7 @@ char* server_receive(server_t *self, size_t *size_read){
 }
 
 char* server_parse(server_t *self, char *buffer, size_t size, size_t *new_size){
-    char *parsed = parser_parse_string(&self->parser, buffer, size);
+    char *parsed = parser_parse_buffer(&self->parser, buffer, size);
     if (!parsed){
         return NULL;
     }        

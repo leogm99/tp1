@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 typedef struct{
-    unsigned short offset;
+    char offset;
     bool to_letter;
 } mapper_t;
 

@@ -9,7 +9,7 @@ bool parser_is_valid(parser_t *self, char c){
     return ((self->lower <= c) && (self->upper >= c));
 }
 
-char* parser_parse_string(parser_t *self, 
+char* parser_parse_buffer(parser_t *self, 
                           const char *src_buffer,
                           size_t src_size){
     size_t parsable = 0;

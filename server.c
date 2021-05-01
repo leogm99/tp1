@@ -1,31 +1,74 @@
 #include "server.h"
 
-// ./server <servicename> <key>
-
-void server_init(server_t *self){
+int server_init(server_t *self, const char *service, const char *key){
+    char err = 0;
     socket_init(&self->listener);
-    socket_init(&self->serv_sock);
-
-    parser_init(&self->parser);
     mapper_init(&self->mapper);
-
     cipher_init(&self->cipher);
-}
+    parser_init(&self->parser);
 
-void server_create_key(server_t *self, const char *raw_key){
-    cipher_create_key(&self->cipher, &self->mapper, raw_key); 
-}
+    if (cipher_create_key(&self->cipher, &self->mapper, key) < 0){
+        err = 1;
+    }
 
-int server_bind_and_listen(server_t *self, const char *service){
-    return socket_bind_and_listen(&self->listener, service);
-}
+    if (!err && (socket_bind_and_listen(&self->listener, service) < 0)){
+        err = 1;
+    }
 
-int server_accept(server_t *self){
-    if ((self->serv_sock.fd = socket_accept(&self->listener, 0)) < 0){
-        return -1;
+    socket_init(&self->serv_sock);
+    if (!err && (self->serv_sock.fd = socket_accept(&self->listener, 0)) < 0){
+        err = 1;
     }
     socket_destroy(&self->listener);
+
+    if(err){
+        socket_destroy(&self->serv_sock);
+        cipher_destroy(&self->cipher);
+        mapper_destroy(&self->mapper);
+        parser_destroy(&self->parser);
+        return err;
+    }
     return 0;
+}
+
+char* server_prepare_message(server_t *self, char *received_buffer, size_t size,
+                             size_t* new_size, char *empty_buffer_flag){
+    size_t parsed_read = 0;
+    char *parsed = server_parse(self, received_buffer, size, &parsed_read);
+    if (!parsed){
+        free(received_buffer);
+        return NULL;
+    }
+    free(received_buffer);
+
+    if (parsed_read == 0){
+        *empty_buffer_flag = 1;
+        free(parsed);
+        return NULL;
+    }
+
+    short *mapped = server_map(self, parsed, parsed_read);            
+    if (!mapped){
+        free(parsed);
+        return NULL;
+    }
+    free(parsed);
+
+    *new_size = parsed_read; 
+    short *encoded = cipher_encode(&self->cipher, mapped, parsed_read, new_size);
+    if (!encoded){
+        free(mapped);
+        return NULL;
+    }
+    free(mapped);
+
+    char *final = server_recast(self, encoded, *new_size);
+    if (!final){
+        free(encoded);
+        return NULL;
+    }
+    free(encoded);
+    return final;
 }
 
 int server_send(server_t *self, char *buffer, size_t size){
@@ -89,15 +132,8 @@ short* server_map(server_t *self, char *buffer, size_t size){
     return mapped_buffer;
 }
 
-short* server_encode(server_t *self, short *buffer, 
-                     const size_t size, size_t *new_size){
-    short *encoded = cipher_encode(&self->cipher, buffer, size, new_size);
-    return encoded;
-}
-
 char *server_recast(server_t *self, short *buffer, size_t size){
     char *new_buf = calloc(size, sizeof(char));
-    //printf("SERVER_RECAST SIZE: %ld", size);
     if (!new_buf){
         return NULL;
     }
@@ -109,81 +145,50 @@ char *server_recast(server_t *self, short *buffer, size_t size){
 }
 
 void server_destroy(server_t *self){
-    socket_destroy(&self->listener);
     socket_destroy(&self->serv_sock);
- 
     parser_destroy(&self->parser);
     mapper_destroy(&self->mapper);
-
     cipher_destroy(&self->cipher);
 }
 
 int main(int argc, const char *argv[]){
+    if (argc != ARGC_SERV) {
+        return -1;
+    }
+
     server_t server;
-    server_init(&server);
-
-    server_create_key(&server, KEY);
-    if (server_bind_and_listen(&server, SERV) < 0){
-        server_destroy(&server);
+    if (server_init(&server, SERV, KEY) < 0){
         return -1;
     }
 
-    if (server_accept(&server) < 0){
-        server_destroy(&server);
-        return -1;
-    }
-
+    char empty_buffer_flag = 0;
     while (1){
         size_t read = 0;
-        size_t parsed_read = 0;
-
         char *buffer = server_receive(&server, &read);
         if (!buffer){
             break;
         }
-
-        char *parsed = server_parse(&server, buffer, read, &parsed_read);
-        if (!parsed){
-            free(buffer);
-            break;
-        }
-        free(buffer);
-
-        if (parsed_read == 0){
+        size_t new_size = 0;
+        char *message = server_prepare_message(&server, buffer, read, 
+                                               &new_size, &empty_buffer_flag);
+        if (!message && empty_buffer_flag){
+            empty_buffer_flag = 0;
             server_send(&server, 0, 0);
-            free(parsed);
             continue;
         }
 
-        short *mapped = server_map(&server, parsed, parsed_read);            
-        if (!mapped){
-            free(parsed);
-            break;
+        else if(!message) {
+            server_destroy(&server);
+            return -1;
         }
 
-        free(parsed);        
-
-        size_t new_size = parsed_read; 
-        short *encoded = server_encode(&server, mapped, parsed_read, &new_size);
-
-        if (!encoded){
-            free(mapped);
-            break;
+        if (server_send(&server, message, new_size) < 0){
+            free(message);
+            server_destroy(&server);
+            return -1;
         }
-        free(mapped);
-
-
-        char *final = server_recast(&server, encoded, new_size);
-
-        if (!final){
-            free(encoded);
-            break;
-        }
-
-        free(encoded);
-
-        server_send(&server, final, new_size);
-        free(final);
+        free(message);
     }
     server_destroy(&server);
+    return 0;
 }

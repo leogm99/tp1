@@ -1,6 +1,8 @@
 #include "common_socket.h"
 
-void socket_init(socket_t *self){}
+void socket_init(socket_t *self){
+    self->fd = -1;
+}
 
 void socket_destroy(socket_t *self){
     if (self->fd != -1){
@@ -24,7 +26,6 @@ struct addrinfo *socket_getadrrinfo(socket_t *self,
 
     int addrinfo = getaddrinfo(host, service, &hints, &results);
     if (addrinfo != 0){
-        fprintf(stderr, "getaddrinfo: failed");
         return NULL;
     }
 
@@ -36,8 +37,6 @@ int socket_bind_and_listen(socket_t *self, const char *service){
     results = socket_getadrrinfo(self, 0, service, AI_PASSIVE); // server
 
     if (!results){
-        socket_destroy(self);
-        fprintf(stderr, "socket_getaddrinfo: got nullpointer");
         return -1;
     }
 
@@ -48,21 +47,16 @@ int socket_bind_and_listen(socket_t *self, const char *service){
         fd = socket(aux->ai_family, 
                           aux->ai_socktype,
                           aux->ai_protocol);
-        if ((bind_error = bind(fd, aux->ai_addr, aux->ai_addrlen)) == 0){
-            break;
-        }
+        bind_error = bind(fd, aux->ai_addr, aux->ai_addrlen);
     }
 
     if (bind_error) {
         freeaddrinfo(results);
-        socket_destroy(self);
         return -1;
     }
 
     self->fd = fd;
     if (fd < 0){
-        fprintf(stderr, "socket_bind_and_listen: could not create socket");
-        socket_destroy(self);
         freeaddrinfo(results);
         return -1;
     }
@@ -70,8 +64,6 @@ int socket_bind_and_listen(socket_t *self, const char *service){
     freeaddrinfo(results);
 
     if (listen(self->fd, 1) == -1){
-        printf("Error escuchando");
-        socket_destroy(self);
         return -1;
     }
 
@@ -108,8 +100,6 @@ int socket_connect(socket_t *self, const char *host, const char *service){
     }
 
     if (connect_error){
-        printf("DEBUG PRINT: INVALID FD, CONNECT_ERROR\n");
-        socket_destroy(self);
         freeaddrinfo(results);
         return -1;
     }

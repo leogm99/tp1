@@ -7,7 +7,6 @@
 #define KEY_MAX 16
 
 #include "common_mapper.h"
-#include "math.h"
 
 
 typedef struct {
@@ -18,7 +17,7 @@ typedef struct {
 
 void cipher_init(cipher_t *self);
 
-void cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key);
+int cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key);
 
 short* cipher_encode(cipher_t *self, short *buffer, 
                      const size_t buffer_size, size_t *new_size);

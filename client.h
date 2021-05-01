@@ -19,9 +19,8 @@ typedef struct {
 } client_t;
 
 
-int client_init(client_t *self, const char *filename);
-
-int client_connect(client_t *self, const char *host, const char *service);
+int client_init(client_t *self, const char *filename,
+                const char *hostname, const char *service);
 
 int client_read_and_send(client_t *self, 
                          char *sent_less_flag, char *newline_flag);

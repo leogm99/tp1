@@ -19,7 +19,7 @@ int cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key){
         default:
             return -1;
     }
-    map(mapper, raw_key, self->key, KEY_MAX);
+    mapper_map(mapper, raw_key, self->key, KEY_MAX);
     return 0;
 }
 

@@ -4,20 +4,22 @@
 // ./client <hostname> <servicename> <filename> <- filepath
 // echo -e ... | ./client <hostaname> <servicename> - <- stdin
 
-int client_init(client_t *self, const char *filename){
+int client_init(client_t *self, const char *filename, 
+                const char *hostname, const char *service){
     socket_init(&self->cli_sock);
     if (file_reader_init(&self->file_reader, filename) < 0){
         return -1;
     }
+
+    if (socket_connect(&self->cli_sock, hostname, service) == -1){
+        file_reader_destroy(&self->file_reader);
+        socket_destroy(&self->cli_sock);
+        return -1;
+    }
+
     mapper_init(&self->mapper);
-
     mapper_invert(&self->mapper);
-
     return 0;
-}
-
-int client_connect(client_t *self, const char *host, const char *service){
-    return socket_connect(&self->cli_sock, host, service);
 }
 
 int client_read_and_send(client_t *self, char *sent_less_flag, 
@@ -83,7 +85,7 @@ int client_receive_and_print(client_t *self){
         return -1;
     }
 
-    map(&self->mapper, buffer, mapped_buffer, size);
+    mapper_map(&self->mapper, buffer, mapped_buffer, size);
 
     fwrite(mapped_buffer, sizeof(char), size, stdout);
     fwrite(&newline, sizeof(char), 1, stdout);
@@ -105,18 +107,12 @@ int main(int argc, const char *argv[]){
     }
 
     client_t client;
+    if (client_init(&client, FILE, HOST, SERV) < 0){
+        return -1;
+    }
+
     char sent_less_flag = 0;
     char newline_flag = 0;
-
-    if (client_init(&client, FILE) < 0){
-        return -1;
-    }
-
-    if (client_connect(&client, HOST, SERV) == -1){
-        client_destroy(&client);
-        return -1;
-    }
-
     while (1){
         if ((client_read_and_send(&client, &sent_less_flag, 
                                   &newline_flag)) <= 0){
@@ -134,6 +130,5 @@ int main(int argc, const char *argv[]){
     }
 
     client_destroy(&client);
-
     return sent_less_flag;
 }

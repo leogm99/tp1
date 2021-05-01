@@ -47,7 +47,9 @@ int socket_bind_and_listen(socket_t *self, const char *service){
         fd = socket(aux->ai_family, 
                           aux->ai_socktype,
                           aux->ai_protocol);
-        bind_error = bind(fd, aux->ai_addr, aux->ai_addrlen);
+        if ((bind_error = bind(fd, aux->ai_addr, aux->ai_addrlen)) == 0){
+            break;
+        }
     }
 
     if (bind_error) {

@@ -21,7 +21,7 @@ int server_init(server_t *self, const char *service, const char *key){
     }
     socket_destroy(&self->listener);
 
-    if(err){
+    if (err){
         socket_destroy(&self->serv_sock);
         cipher_destroy(&self->cipher);
         mapper_destroy(&self->mapper);
@@ -55,7 +55,8 @@ char* server_prepare_message(server_t *self, char *received_buffer, size_t size,
     free(parsed);
 
     *new_size = parsed_read; 
-    short *encoded = cipher_encode(&self->cipher, mapped, parsed_read, new_size);
+    short *encoded = cipher_encode(&self->cipher, mapped, 
+                                   parsed_read, new_size);
     if (!encoded){
         free(mapped);
         return NULL;
@@ -128,7 +129,7 @@ short* server_map(server_t *self, char *buffer, size_t size){
         return NULL;
     }
 
-    map(&self->mapper, buffer, mapped_buffer, size);
+    mapper_map(&self->mapper, buffer, mapped_buffer, size);
     return mapped_buffer;
 }
 
@@ -166,7 +167,8 @@ int main(int argc, const char *argv[]){
         size_t read = 0;
         char *buffer = server_receive(&server, &read);
         if (!buffer){
-            break;
+            server_destroy(&server);
+            return -1;
         }
         size_t new_size = 0;
         char *message = server_prepare_message(&server, buffer, read, 
@@ -175,9 +177,7 @@ int main(int argc, const char *argv[]){
             empty_buffer_flag = 0;
             server_send(&server, 0, 0);
             continue;
-        }
-
-        else if(!message) {
+        } else if (!message) {
             server_destroy(&server);
             return -1;
         }

@@ -168,7 +168,7 @@ int main(int argc, const char *argv[]){
         char *buffer = server_receive(&server, &read);
         if (!buffer){
             server_destroy(&server);
-            return -1;
+            break;
         }
         size_t new_size = 0;
         char *message = server_prepare_message(&server, buffer, read, 

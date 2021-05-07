@@ -16,7 +16,7 @@ int server_init(server_t *self, const char *service, const char *key){
     }
 
     socket_init(&self->serv_sock);
-    if (!err && (self->serv_sock.fd = socket_accept(&self->listener, 0)) < 0){
+    if (!err && (socket_accept(&self->listener, &self->serv_sock)) < 0){
         err = 1;
     }
     socket_destroy(&self->listener);

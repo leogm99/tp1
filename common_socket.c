@@ -64,7 +64,13 @@ int socket_bind_and_listen(socket_t *self, const char *service){
 }
 
 int socket_accept(socket_t *listener, socket_t *peer){
-    return accept(listener->fd, 0, 0);
+    int peer_fd = accept(listener->fd, 0, 0);
+    if (peer_fd < 0){
+        return -1;
+    }
+
+    peer->fd = peer_fd;
+    return 0;
 }
 
 int socket_connect(socket_t *self, const char *host, const char *service){

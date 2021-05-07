@@ -14,11 +14,6 @@ typedef struct{
 void socket_init(socket_t *self);
 void socket_destroy(socket_t *self);
 
-struct addrinfo *socket_getadrrinfo(socket_t *self, 
-                                     const char *host,
-                                     const char *service,
-                                     const int caller_ai_flags);
-
 int socket_bind_and_listen(socket_t *self, const char *service);
 int socket_accept(socket_t *listener, socket_t *peer);
 

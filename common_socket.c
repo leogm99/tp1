@@ -12,7 +12,7 @@ void socket_destroy(socket_t *self){
     self->fd = -1;
 }
 
-struct addrinfo *socket_getadrrinfo(socket_t *self, 
+static struct addrinfo *_socket_getadrrinfo(socket_t *self, 
                                      const char *host,
                                      const char *service,
                                      const int caller_ai_flags){
@@ -34,7 +34,7 @@ struct addrinfo *socket_getadrrinfo(socket_t *self,
 
 int socket_bind_and_listen(socket_t *self, const char *service){
     struct addrinfo * results; 
-    results = socket_getadrrinfo(self, 0, service, AI_PASSIVE); // server
+    results = _socket_getadrrinfo(self, 0, service, AI_PASSIVE); // server
 
     if (!results){
         return -1;
@@ -69,7 +69,7 @@ int socket_accept(socket_t *listener, socket_t *peer){
 
 int socket_connect(socket_t *self, const char *host, const char *service){
     struct addrinfo * results;
-    results = socket_getadrrinfo(self, 0, service, 0);
+    results = _socket_getadrrinfo(self, 0, service, 0);
 
     if (!results){
         return -1;

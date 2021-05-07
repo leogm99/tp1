@@ -123,5 +123,5 @@ int main(int argc, const char *argv[]){
     }
 
     client_destroy(&client);
-    return sent_less_flag;
+    return sent_less_flag || errno;
 }

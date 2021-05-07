@@ -4,8 +4,8 @@ int file_reader_init(file_reader_t *self, const char *filename){
     if (!filename){
         return -1;
     }
-    int c = '-';
-    self->file = (strchr(filename, c) != 0) ? stdin : fopen(filename, "r");
+    const char c = '-';
+    self->file = (strncmp(filename, &c, 1) == 0) ? stdin : fopen(filename, "r");
     if (!self->file){
         return -1;
     }

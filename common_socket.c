@@ -51,19 +51,10 @@ int socket_bind_and_listen(socket_t *self, const char *service){
             break;
         }
     }
-
-    if (bind_error) {
-        freeaddrinfo(results);
-        return -1;
-    }
-
-    self->fd = fd;
-    if (fd < 0){
-        freeaddrinfo(results);
-        return -1;
-    }
-
+    
     freeaddrinfo(results);
+    if (bind_error || fd < 0) return -1;
+    self->fd = fd;
 
     if (listen(self->fd, 1) == -1){
         return -1;

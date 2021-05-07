@@ -25,12 +25,11 @@ int cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key){
 
 // La parte logica, debe multiplicar la key con el buffer
 // Hay que lograr un toque de aritmetica modular
-// Trabajo con short's ya que quiero evitar desbordamiento de chars
-short* cipher_encode(cipher_t *self, short *buffer,
+char* cipher_encode(cipher_t *self, char *buffer,
                      const size_t buffer_size, size_t *new_size){
     size_t size = buffer_size;
     size_t key_size = self->dim * self->dim;
-    short *aux = buffer;
+    char *aux = buffer;
     bool resized = false;
 
     if (buffer_size % self->dim){
@@ -41,7 +40,7 @@ short* cipher_encode(cipher_t *self, short *buffer,
         *new_size = size;
     }
 
-    short *new_buf = calloc(size, sizeof(short));
+    char *new_buf = calloc(size, sizeof(char));
     if (!new_buf){
         if (resized){
             free(aux);
@@ -49,15 +48,16 @@ short* cipher_encode(cipher_t *self, short *buffer,
         return NULL;
     }
 
+    int auxiliar_sum = 0; // safe haven
     for (size_t i = 0; i < size - self->dim + 1; i+=self->dim){
         for (size_t j = 0; j < key_size; ++j){
-            new_buf[i + (j / self->dim)] += aux[i + (j % self->dim)] 
-                                            * self->key[j];
+            auxiliar_sum += (short) aux[i + (j % self->dim)] * self->key[j];
+            if ((j % self->dim) == (self->dim - 1)){
+                auxiliar_sum %= 26;
+                new_buf[i + (j / self->dim)] = auxiliar_sum;
+                auxiliar_sum = 0;
+            }
         }
-    }
-
-    for (size_t i = 0; i < size; ++i){
-        new_buf[i] %= 26;
     }
 
     if (resized){
@@ -67,17 +67,17 @@ short* cipher_encode(cipher_t *self, short *buffer,
     return new_buf;
 }
 
-short* cipher_resize(cipher_t *self, short *buffer, 
+char* cipher_resize(cipher_t *self, char *buffer, 
                      const size_t old_size, size_t *resize){
     size_t new_size = old_size + self->dim - (old_size % self->dim);
 
-    //short* new_buffer = realloc(buffer, sizeof(short) * new_size);
-    short *new_buffer = calloc(new_size, sizeof(short));
+    //char* new_buffer = realloc(buffer, sizeof(char) * new_size);
+    char *new_buffer = calloc(new_size, sizeof(char));
     if (!new_buffer){
         return NULL;
     }
 
-    memcpy(new_buffer, buffer, sizeof(short) * old_size);
+    memcpy(new_buffer, buffer, sizeof(char) * old_size);
 
     *resize = new_size;
     return new_buffer;

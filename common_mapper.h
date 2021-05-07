@@ -19,7 +19,7 @@ void mapper_map(mapper_t *self,
 
 void mapper_to_number(mapper_t *self, 
                 const char *parsed_buffer, 
-                short *dest_buffer, size_t dest_size);
+                char *dest_buffer, size_t dest_size);
 
 void mapper_to_text(mapper_t *self, 
                  const char *parsed_buffer, 

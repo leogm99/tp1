@@ -13,7 +13,7 @@ void mapper_map(mapper_t *self, const void *parsed_buffer,
 
 void mapper_to_number(mapper_t *self, 
                 const char *parsed_buffer,
-                short *dest_buffer,
+                char *dest_buffer,
                 size_t dest_size){
     for (size_t i = 0; i < dest_size; ++i){
         dest_buffer[i] = parsed_buffer[i] - self->offset;

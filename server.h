@@ -32,9 +32,7 @@ int server_send(server_t *self, char *buffer, size_t size);
 char* server_receive(server_t *self, size_t *size_read);
 
 char* server_parse(server_t *self, char *buffer, size_t size, size_t *new_size);
-short* server_map(server_t *self, char *buffer, size_t size);
-
-char *server_recast(server_t *self, short *buffer, size_t size);
+char* server_map(server_t *self, char *buffer, size_t size);
 
 void server_destroy(server_t *self);
 

@@ -11,7 +11,7 @@
 
 typedef struct {
     size_t dim;
-    short key[KEY_MAX];
+    char key[KEY_MAX];
 } cipher_t;
 
 
@@ -19,10 +19,10 @@ void cipher_init(cipher_t *self);
 
 int cipher_create_key(cipher_t *self, mapper_t *mapper, const char *raw_key);
 
-short* cipher_encode(cipher_t *self, short *buffer, 
+char* cipher_encode(cipher_t *self, char *buffer, 
                      const size_t buffer_size, size_t *new_size);
 
-short* cipher_resize(cipher_t *self, short *buffer, 
+char* cipher_resize(cipher_t *self, char *buffer, 
                      const size_t old_size, size_t *resize);
 
 void cipher_destroy(cipher_t *self);

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     char lower;
@@ -16,7 +17,7 @@ void parser_init(parser_t *self);
 bool parser_is_valid(parser_t *self, char c);
 
 char* parser_parse_buffer(parser_t *self, 
-                          const char *src_buffer, size_t src_size);
+                          char *src_buffer, size_t src_size);
 
 void parser_destroy(parser_t *self);
 

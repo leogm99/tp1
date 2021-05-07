@@ -33,35 +33,21 @@ int server_init(server_t *self, const char *service, const char *key){
 
 char* server_prepare_message(server_t *self, char *received_buffer, size_t size,
                              size_t* new_size, char *empty_buffer_flag){
-    size_t parsed_read = 0;
-    char *parsed = server_parse(self, received_buffer, size, &parsed_read);
-    if (!parsed){
+    server_parse(self, received_buffer, size, new_size);
+    if (*new_size == 0){
+        *empty_buffer_flag = 1;
+        free(received_buffer);
+        return NULL;
+    }
+
+    server_map(self, received_buffer, *new_size);
+    char *encoded = cipher_encode(&self->cipher, received_buffer, 
+                                   *new_size, new_size);
+    if (!encoded){
         free(received_buffer);
         return NULL;
     }
     free(received_buffer);
-
-    if (parsed_read == 0){
-        *empty_buffer_flag = 1;
-        free(parsed);
-        return NULL;
-    }
-
-    char *mapped = server_map(self, parsed, parsed_read);            
-    if (!mapped){
-        free(parsed);
-        return NULL;
-    }
-    free(parsed);
-
-    *new_size = parsed_read; 
-    char *encoded = cipher_encode(&self->cipher, mapped, 
-                                   parsed_read, new_size);
-    if (!encoded){
-        free(mapped);
-        return NULL;
-    }
-    free(mapped);
     return encoded;
 }
 
@@ -117,13 +103,8 @@ char* server_parse(server_t *self, char *buffer, size_t size, size_t *new_size){
 }
 
 char* server_map(server_t *self, char *buffer, size_t size){
-    char *mapped_buffer = calloc(size, sizeof(char));
-    if (!mapped_buffer){
-        return NULL;
-    }
-
-    mapper_map(&self->mapper, buffer, mapped_buffer, size);
-    return mapped_buffer;
+    mapper_map(&self->mapper, buffer, buffer, size);
+    return buffer;
 }
 
 void server_destroy(server_t *self){

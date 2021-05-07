@@ -19,7 +19,6 @@ int server_init(server_t *self, const char *service, const char *key){
     if (!err && (socket_accept(&self->listener, &self->serv_sock)) < 0){
         err = 1;
     }
-    socket_destroy(&self->listener);
 
     if (err){
         socket_destroy(&self->serv_sock);
@@ -108,6 +107,7 @@ char* server_map(server_t *self, char *buffer, size_t size){
 }
 
 void server_destroy(server_t *self){
+    socket_destroy(&self->listener);
     socket_destroy(&self->serv_sock);
     parser_destroy(&self->parser);
     mapper_destroy(&self->mapper);

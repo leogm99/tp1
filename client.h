@@ -4,6 +4,7 @@
 #include "client_file_reader.h"
 #include "common_socket.h"
 #include "common_mapper.h"
+#include <errno.h>
 
 #define ARGC_CLIENT 4
 #define HOST argv[1]

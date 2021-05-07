@@ -28,7 +28,9 @@ int client_read_and_send(client_t *self, char *sent_less_flag,
     char *line = NULL; 
 
     expected = file_reader_readline(&self->file_reader, &line);
-
+    if (errno == ENOMEM || errno == EINVAL){
+        return -1;
+    }
     // si lei 0, ya esta
     // de todas maneras tengo que hacer free
     // segun man 3 getline
@@ -61,7 +63,6 @@ int client_receive_and_print(client_t *self){
     }
 
     size = htons(size);
-
     if (size == 0){
         fwrite(&newline, 1, 1, stdout);
         return 0;
@@ -78,20 +79,12 @@ int client_receive_and_print(client_t *self){
         return -1;
     }
 
-    char *mapped_buffer = calloc(size, sizeof(char));
+    mapper_map(&self->mapper, buffer, buffer, size);
 
-    if (!mapped_buffer){
-        free(buffer);
-        return -1;
-    }
-
-    mapper_map(&self->mapper, buffer, mapped_buffer, size);
-
-    fwrite(mapped_buffer, sizeof(char), size, stdout);
+    fwrite(buffer, sizeof(char), size, stdout);
     fwrite(&newline, sizeof(char), 1, stdout);
 
     free(buffer);
-    free(mapped_buffer);
     return 0;
 }
 

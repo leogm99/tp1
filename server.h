@@ -6,15 +6,14 @@
 #define KEY argv[2]
 
 #include "common_socket.h"
-#include "server_parser.h"
 #include "common_mapper.h"
+#include "common_protocol.h"
 #include "server_cipher.h"
-
+#include "server_parser.h"
 
 typedef struct {
-    socket_t listener;
-    socket_t serv_sock;
-    
+    protocol_t protocol;
+
     parser_t parser;
     mapper_t mapper;
 

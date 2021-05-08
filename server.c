@@ -2,7 +2,10 @@
 
 int server_init(server_t *self, const char *service, const char *key){
     char err = 0;
-    socket_init(&self->listener);
+    if (protocol_server_init(&self->protocol, service)){
+        return -1;
+    }
+
     mapper_init(&self->mapper);
     cipher_init(&self->cipher);
     parser_init(&self->parser);
@@ -11,17 +14,8 @@ int server_init(server_t *self, const char *service, const char *key){
         err = 1;
     }
 
-    if (!err && (socket_bind_and_listen(&self->listener, service) < 0)){
-        err = 1;
-    }
-
-    socket_init(&self->serv_sock);
-    if (!err && (socket_accept(&self->listener, &self->serv_sock)) < 0){
-        err = 1;
-    }
-
     if (err){
-        socket_destroy(&self->serv_sock);
+        protocol_destroy(&self->protocol);
         cipher_destroy(&self->cipher);
         mapper_destroy(&self->mapper);
         parser_destroy(&self->parser);
@@ -38,7 +32,6 @@ char* server_prepare_message(server_t *self, char *received_buffer, size_t size,
         free(received_buffer);
         return NULL;
     }
-
     server_map(self, received_buffer, *new_size);
     char *encoded = cipher_encode(&self->cipher, received_buffer, 
                                    *new_size, new_size);
@@ -51,52 +44,15 @@ char* server_prepare_message(server_t *self, char *received_buffer, size_t size,
 }
 
 int server_send(server_t *self, char *buffer, size_t size){
-    uint16_t to_send = size * sizeof(char);
-    uint16_t client_to_send = ntohs(to_send);
-    if (socket_send(&self->serv_sock, &client_to_send, sizeof(uint16_t)) 
-                    < sizeof(uint16_t)){
-        return -1;
-    }
-
-    if (size == 0){
-        return 0;
-    }
-
-    if (socket_send(&self->serv_sock, buffer, to_send) < to_send){
-        return -1;
-    }
-
-    return 0;
+    return protocol_send(&self->protocol, buffer, size, ntohs);
 }
 
 char* server_receive(server_t *self, size_t *size_read){
-    uint16_t buf_size = 0;
-    if (socket_receive(&self->serv_sock, &buf_size, sizeof(uint16_t)) 
-                       < sizeof(uint16_t)){
-        return NULL;
-    }
-
-    buf_size = ntohs(buf_size);
-    char *buffer = calloc(buf_size, sizeof(buf_size));
-
-    if (!buffer){
-        return NULL;
-    }
-
-    if (socket_receive(&self->serv_sock, buffer, buf_size) < buf_size){
-        return NULL;
-    }
-
-    *size_read = buf_size; 
-    return buffer;
+    return protocol_receive(&self->protocol, size_read, ntohs, NULL);
 }
 
 char* server_parse(server_t *self, char *buffer, size_t size, size_t *new_size){
     char *parsed = parser_parse_buffer(&self->parser, buffer, size);
-    if (!parsed){
-        return NULL;
-    }        
-
     *new_size = strlen(parsed);
     return parsed; 
 }
@@ -107,8 +63,7 @@ char* server_map(server_t *self, char *buffer, size_t size){
 }
 
 void server_destroy(server_t *self){
-    socket_destroy(&self->listener);
-    socket_destroy(&self->serv_sock);
+    protocol_destroy(&self->protocol);
     parser_destroy(&self->parser);
     mapper_destroy(&self->mapper);
     cipher_destroy(&self->cipher);
@@ -129,7 +84,6 @@ int main(int argc, const char *argv[]){
         size_t read = 0;
         char *buffer = server_receive(&server, &read);
         if (!buffer){
-            server_destroy(&server);
             break;
         }
         size_t new_size = 0;

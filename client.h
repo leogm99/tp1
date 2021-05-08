@@ -4,6 +4,7 @@
 #include "client_file_reader.h"
 #include "common_socket.h"
 #include "common_mapper.h"
+#include "common_protocol.h"
 #include <errno.h>
 
 #define ARGC_CLIENT 4
@@ -14,9 +15,9 @@
 
 
 typedef struct {
-    socket_t cli_sock;
     file_reader_t file_reader;
     mapper_t mapper;
+    protocol_t protocol;
 } client_t;
 
 
